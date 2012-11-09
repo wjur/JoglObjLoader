@@ -14,6 +14,8 @@ public class Example extends GLJPanel implements GLEventListener {
 	private static int width;
 	private static int height;
 	private FPSAnimator animator;
+	
+	private GLModel chairModel = null;
 
 	public Example() {
 		setFocusable(true);
@@ -24,9 +26,16 @@ public class Example extends GLJPanel implements GLEventListener {
 	}
 
 	@Override
-	public void display(GLAutoDrawable arg0) {
-		// TODO Auto-generated method stub
+	public void display(GLAutoDrawable drawable) {
+		GL2 gl = drawable.getGL().getGL2();
+		gl.glLoadIdentity();
+		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+		
+		gl.glTranslatef(0,0,-1);
+		gl.glScalef(0.01f, 0.01f, 0.01f);
+		chairModel.opengldraw(gl);
 
+		gl.glFlush();
 	}
 
 	@Override
@@ -47,14 +56,43 @@ public class Example extends GLJPanel implements GLEventListener {
 		gl.glLoadIdentity();
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		gl.glLoadIdentity();
-		gl.glEnable(GL2.GL_LIGHTING);
-		gl.glLightModeli(GL2.GL_LIGHT_MODEL_LOCAL_VIEWER, GL2.GL_TRUE);
-		gl.glLoadIdentity();
 		GLU glu = new GLU();
-
+		
+		if (false == loadModels(gl)) {
+			System.exit(1);
+		}
+		
+		setLight(gl);
 
 		glu.gluPerspective(1, (double) getWidth() / getHeight(), 0.3, 50);
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
+	}
+	
+	private void setLight(GL2 gl) {
+		
+		gl.glEnable(GL2.GL_LIGHTING);
+		
+		float SHINE_ALL_DIRECTIONS = 1;
+		float[] lightPos = { -30, 30, 30, SHINE_ALL_DIRECTIONS };
+		float[] lightColorAmbient = { 0.02f, 0.02f, 0.02f, 1f };
+		float[] lightColorSpecular = { 0.9f, 0.9f, 0.9f, 1f };
+
+		// Set light parameters.
+		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, lightPos, 0);
+		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_AMBIENT, lightColorAmbient, 0);
+		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, lightColorSpecular, 0);
+		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_DIFFUSE, lightColorSpecular, 0);
+		gl.glEnable(GL2.GL_LIGHT1);
+		
+	}
+
+	private Boolean loadModels(GL2 gl) {
+		chairModel = ModelLoaderOBJ.LoadModel("./models/c.obj",
+				"./models/c.mtl", gl);
+		if (chairModel == null) {
+			return false;
+		}
+		return true;
 	}
 
 	@Override
